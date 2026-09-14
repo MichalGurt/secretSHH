@@ -1,0 +1,429 @@
+```html
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta property="og:title" content="MurderDrones.pl">
+    <meta property="og:description" content="Murder Drones">
+    <meta property="og:type" content="website">
+
+    <title>murderdrones.pl</title>
+
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a0a;
+            font-family: monospace;
+        }
+
+        .crt-screen {
+            position: fixed;
+            inset: 0;
+
+            background:
+                radial-gradient(
+                    ellipse at center,
+                    #0d0e0a 0%,
+                    #050504 70%,
+                    #000 100%
+                );
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* WARNING */
+        .warning {
+            position: fixed;
+            top: 35px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            z-index: 20;
+
+            color: #FFD700;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+
+            text-shadow:
+                0 0 5px #FFD700,
+                0 0 12px rgba(255, 215, 0, .8),
+                0 0 25px rgba(255, 215, 0, .4);
+
+            transition:
+                opacity .5s ease,
+                transform .5s ease;
+        }
+
+        /* SOLVER */
+        .solver-symbol {
+            user-select: none;
+            -webkit-user-select: none;
+
+            position: relative;
+            z-index: 5;
+
+            cursor: pointer;
+
+            transition:
+                opacity .5s ease,
+                transform .5s ease;
+        }
+
+        .solver-symbol img {
+            width: clamp(140px, 22vw, 300px);
+            height: auto;
+            display: block;
+
+            cursor: pointer;
+
+            user-select: none;
+            -webkit-user-drag: none;
+
+            animation:
+                breathe 6s cubic-bezier(.45, 0, .55, 1) infinite;
+        }
+
+        @keyframes breathe {
+            0% {
+                opacity: .7;
+
+                filter:
+                    drop-shadow(0 0 4px rgba(255, 215, 0, .2))
+                    drop-shadow(0 0 12px rgba(255, 215, 0, .1));
+            }
+
+            50% {
+                opacity: 1;
+
+                filter:
+                    drop-shadow(0 0 12px rgba(255, 215, 0, .6))
+                    drop-shadow(0 0 30px rgba(255, 215, 0, .35))
+                    drop-shadow(0 0 60px rgba(255, 215, 0, .15));
+            }
+
+            100% {
+                opacity: .7;
+
+                filter:
+                    drop-shadow(0 0 4px rgba(255, 215, 0, .2))
+                    drop-shadow(0 0 12px rgba(255, 215, 0, .1));
+            }
+        }
+
+        /* NAPIS PO KLIKNIĘCIU */
+        .after-message {
+            position: fixed;
+            inset: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            z-index: 4;
+
+            color: #FFD700;
+            font-family: monospace;
+            font-size: clamp(24px, 4vw, 50px);
+            font-weight: bold;
+            text-align: center;
+
+            opacity: 0;
+
+            pointer-events: none;
+
+            text-shadow:
+                0 0 5px #FFD700,
+                0 0 12px rgba(255, 215, 0, .8),
+                0 0 25px rgba(255, 215, 0, .4);
+
+            transition: opacity .5s ease;
+        }
+
+        /* CRT */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+
+            pointer-events: none;
+
+            z-index: 10;
+
+            background:
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    transparent 3px,
+                    rgba(0,0,0,.25) 3px,
+                    rgba(0,0,0,.25) 4px
+                );
+        }
+
+        .crt-vignette {
+            position: fixed;
+            inset: 0;
+
+            pointer-events: none;
+
+            z-index: 11;
+
+            background:
+                radial-gradient(
+                    ellipse at center,
+                    transparent 55%,
+                    rgba(0,0,0,.5) 80%,
+                    rgba(0,0,0,.95) 100%
+                );
+
+            border-radius: 12px;
+        }
+
+        .crt-glow {
+            position: fixed;
+            inset: -2px;
+
+            pointer-events: none;
+
+            z-index: 1;
+
+            border-radius: 14px;
+
+            box-shadow:
+                inset 0 0 80px rgba(20,18,10,.8),
+                inset 0 0 200px rgba(10,8,5,.4),
+                0 0 40px rgba(40,35,10,.15);
+        }
+
+        .rgb-overlay {
+            position: fixed;
+            inset: 0;
+
+            pointer-events: none;
+
+            z-index: 12;
+
+            opacity: .03;
+
+            background-image:
+                repeating-linear-gradient(
+                    to right,
+                    #f00 0,
+                    #f00 1px,
+                    #0f0 1px,
+                    #0f0 2px,
+                    #00f 2px,
+                    #00f 3px
+                );
+
+            background-size: 3px 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="crt-screen">
+
+        <!-- WARNING -->
+        <div class="warning" id="warning">
+            ⚠ NIE KLIKAJ ZNAKU SOLVERA... ⚠
+        </div>
+
+        <!-- SOLVER SYMBOL -->
+        <div
+            class="solver-symbol"
+            id="solverSymbol"
+            onclick="activateSolver()"
+        >
+            <img
+                src="https://absolutesolver.com/assets/solver-symbol.png"
+                alt="Absolute Solver"
+                draggable="false"
+            >
+        </div>
+
+        <!-- AUDIO -->
+        <audio
+            id="solverAudio"
+            src="https://files.catbox.moe/4uayt2.mp3"
+            loop
+            preload="auto"
+        ></audio>
+
+        <!-- MESSAGE -->
+        <div class="after-message" id="afterMessage">
+            Strona nie jest skończona :P
+        </div>
+
+    </div>
+
+    <!-- CRT EFFECTS -->
+    <div class="crt-glow"></div>
+    <div class="scanlines"></div>
+    <div class="crt-vignette"></div>
+    <div class="rgb-overlay"></div>
+
+
+    <script>
+
+        /* =========================
+           SOLVER CLICK
+        ========================= */
+
+        function activateSolver() {
+
+            const solver =
+                document.getElementById("solverSymbol");
+
+            const warning =
+                document.getElementById("warning");
+
+            const message =
+                document.getElementById("afterMessage");
+
+            const audio =
+                document.getElementById("solverAudio");
+
+
+            solver.style.pointerEvents = "none";
+
+            solver.style.opacity = "0";
+
+            solver.style.transform =
+                "scale(0.85)";
+
+
+            warning.style.opacity = "0";
+
+            warning.style.transform =
+                "translateX(-50%) translateY(-10px)";
+
+
+            /* START AUDIO */
+            audio.volume = 0;
+            audio.currentTime = 0;
+
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+
+                playPromise.catch(() => {
+                    console.log(
+                        "Przeglądarka zablokowała audio."
+                    );
+                });
+
+            }
+
+
+            /* AFTER 1 SECOND */
+            setTimeout(() => {
+
+                audio.volume = 1;
+
+                message.style.opacity = "1";
+
+            }, 1000);
+
+
+            /* REMOVE SOLVER + WARNING */
+            setTimeout(() => {
+
+                solver.style.display = "none";
+
+                warning.style.display = "none";
+
+            }, 500);
+        }
+
+
+        /* =========================
+           BLOCK RIGHT CLICK
+        ========================= */
+
+        document.addEventListener(
+            "contextmenu",
+            function(e) {
+                e.preventDefault();
+            }
+        );
+
+
+        /* =========================
+           BLOCK DEVTOOLS SHORTCUTS
+        ========================= */
+
+        document.addEventListener(
+            "keydown",
+            function(e) {
+
+                /* F12 */
+                if (e.key === "F12") {
+                    e.preventDefault();
+                }
+
+
+                /* CTRL + SHIFT + I */
+                if (
+                    e.ctrlKey &&
+                    e.shiftKey &&
+                    e.key.toLowerCase() === "i"
+                ) {
+                    e.preventDefault();
+                }
+
+
+                /* CTRL + SHIFT + J */
+                if (
+                    e.ctrlKey &&
+                    e.shiftKey &&
+                    e.key.toLowerCase() === "j"
+                ) {
+                    e.preventDefault();
+                }
+
+
+                /* CTRL + SHIFT + C */
+                if (
+                    e.ctrlKey &&
+                    e.shiftKey &&
+                    e.key.toLowerCase() === "c"
+                ) {
+                    e.preventDefault();
+                }
+
+
+                /* CTRL + U */
+                if (
+                    e.ctrlKey &&
+                    e.key.toLowerCase() === "u"
+                ) {
+                    e.preventDefault();
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+</html>
+```
